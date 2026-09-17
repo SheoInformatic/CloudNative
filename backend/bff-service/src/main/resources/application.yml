@@ -1,0 +1,34 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: bff-service
+
+azure:
+  ad:
+    tenant-id: ${AZURE_TENANT_ID}
+    audience: ${AZURE_API_AUDIENCE}     # p.ej. api://<client-id-de-la-app-api> o el client-id a secas
+
+servicios:
+  productos:
+    url: ${PRODUCTOS_SERVICE_URL:http://localhost:8081}
+  pedidos:
+    url: ${PEDIDOS_SERVICE_URL:http://localhost:8082}
+
+cors:
+  allowed-origins: ${ALLOWED_ORIGINS:http://localhost:4200}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+logging:
+  level:
+    com.pedidos360: INFO
+    org.springframework.security: INFO

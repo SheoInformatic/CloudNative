@@ -1,0 +1,32 @@
+<h1>Mis pedidos</h1>
+
+<form (ngSubmit)="crearPedido()" class="form-inline">
+  <label>
+    Producto ID
+    <input type="number" [(ngModel)]="nuevoProductoId" name="productoId" min="1" required />
+  </label>
+  <label>
+    Cantidad
+    <input type="number" [(ngModel)]="nuevaCantidad" name="cantidad" min="1" required />
+  </label>
+  <button class="primary" type="submit">Crear pedido</button>
+</form>
+
+<p *ngIf="cargando">Cargando...</p>
+<p *ngIf="error" style="color:#c0392b">{{ error }}</p>
+
+<table *ngIf="pedidos.length">
+  <thead>
+    <tr><th>ID</th><th>Estado</th><th>Items</th><th>Creado</th></tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let p of pedidos">
+      <td>{{ p.id }}</td>
+      <td>{{ p.estado }}</td>
+      <td>{{ p.items.length }}</td>
+      <td>{{ p.creadoEn | date: "short" }}</td>
+    </tr>
+  </tbody>
+</table>
+
+<p *ngIf="!cargando && pedidos.length === 0 && !error">Aun no tienes pedidos.</p>

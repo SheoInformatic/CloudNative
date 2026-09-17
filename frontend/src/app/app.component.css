@@ -1,0 +1,17 @@
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  background: #ffffff;
+  border-bottom: 1px solid #e1e4e8;
+}
+.brand { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.brand-mark {
+  background: #0f6cbd; color: #fff; border-radius: 6px;
+  padding: 2px 8px; font-size: 12px;
+}
+nav a { margin-right: 16px; text-decoration: none; color: #333; }
+.session { display: flex; align-items: center; gap: 10px; }
+.roles { color: #666; font-size: 13px; }
+.content { padding: 24px; max-width: 960px; margin: 0 auto; }

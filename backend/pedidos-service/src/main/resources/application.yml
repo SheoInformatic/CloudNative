@@ -1,0 +1,25 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: pedidos-service
+
+servicios:
+  productos:
+    # En Azure Container Apps se resuelve por el nombre interno del servicio, p.ej.:
+    # http://productos-service.internal.<env-id>.azurecontainerapps.io
+    url: ${PRODUCTOS_SERVICE_URL:http://localhost:8081}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+logging:
+  level:
+    com.pedidos360: INFO
