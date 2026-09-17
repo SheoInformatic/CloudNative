@@ -1,14 +1,11 @@
-// Entorno de desarrollo local.
-// Reemplazar los valores de Azure AD por los de la App Registration real (SPA).
 export const environment = {
   production: false,
   azureAd: {
-    clientId: "REEMPLAZAR-CLIENT-ID-SPA",
-    tenantId: "REEMPLAZAR-TENANT-ID",
+    clientId: "9c57ab14-644b-4a70-b83b-d7245c54d4aa",
+    tenantId: "bb5324af-c266-41ed-b36c-a971641c7af2",
     redirectUri: "http://localhost:4200",
     postLogoutRedirectUri: "http://localhost:4200",
-    // Scope expuesto por la App Registration de la API (bff-service / APIM).
-    apiScope: "api://REEMPLAZAR-CLIENT-ID-API/access_as_user",
+    apiScope: "api://0ce26bf6-a664-4e69-b78b-a0847267d824/access_as_user",
   },
-  apiBaseUrl: "http://localhost:8080", // en produccion: URL publica de Azure API Management
+  apiBaseUrl: "http://localhost:8080",
 };

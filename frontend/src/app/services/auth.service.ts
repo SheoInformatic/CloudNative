@@ -1,6 +1,7 @@
 import { Injectable } from "@angular/core";
 import { MsalService } from "@azure/msal-angular";
-import { AccountInfo } from "@azure/msal-browser";
+import { AccountInfo, AuthenticationResult } from "@azure/msal-browser";
+import { Observable } from "rxjs";
 import { environment } from "../../environments/environment";
 
 /**
@@ -11,6 +12,16 @@ import { environment } from "../../environments/environment";
 @Injectable({ providedIn: "root" })
 export class AuthService {
   constructor(private readonly msalService: MsalService) {}
+
+  /**
+   * Procesa la respuesta de Azure AD tras el redirect (el "#code=..." en la URL):
+   * intercambia el codigo por los tokens y activa la cuenta. SIN esto, MSAL nunca
+   * termina el login aunque Azure AD haya autenticado correctamente al usuario.
+   * Debe llamarse una vez al arrancar la app (ver AppComponent.ngOnInit).
+   */
+  handleRedirect(): Observable<AuthenticationResult | null> {
+    return this.msalService.handleRedirectObservable();
+  }
 
   login(): void {
     this.msalService.loginRedirect({
