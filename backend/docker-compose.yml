@@ -1,0 +1,37 @@
+# Levanta los 3 microservicios juntos para probar la comunicacion interna en local,
+# antes de desplegar nada en Azure. El frontend Angular corre aparte con "npm start"
+# y apunta a http://localhost:8080 (bff-service) via environment.ts.
+version: "3.8"
+
+services:
+  productos-service:
+    build: ./productos-service
+    ports:
+      - "8081:8081"
+    networks: [pedidos360-net]
+
+  pedidos-service:
+    build: ./pedidos-service
+    ports:
+      - "8082:8082"
+    environment:
+      PRODUCTOS_SERVICE_URL: http://productos-service:8081
+    depends_on: [productos-service]
+    networks: [pedidos360-net]
+
+  bff-service:
+    build: ./bff-service
+    ports:
+      - "8080:8080"
+    environment:
+      AZURE_TENANT_ID: ${AZURE_TENANT_ID}
+      AZURE_API_AUDIENCE: ${AZURE_API_AUDIENCE}
+      PRODUCTOS_SERVICE_URL: http://productos-service:8081
+      PEDIDOS_SERVICE_URL: http://pedidos-service:8082
+      ALLOWED_ORIGINS: http://localhost:4200
+    depends_on: [productos-service, pedidos-service]
+    networks: [pedidos360-net]
+
+networks:
+  pedidos360-net:
+    driver: bridge

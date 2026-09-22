@@ -1,0 +1,27 @@
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark">P360</span>
+    <span>Pedidos360</span>
+  </div>
+
+  <nav *ngIf="isLoggedIn">
+    <a routerLink="/">Inicio</a>
+    <a routerLink="/pedidos">Mis pedidos</a>
+    <a routerLink="/productos">Productos (Admin)</a>
+  </nav>
+
+  <div class="session">
+    <ng-container *ngIf="isLoggedIn; else loggedOut">
+      <span class="user">{{ displayName }}</span>
+      <span class="roles" *ngIf="roles.length">({{ roles.join(", ") }})</span>
+      <button class="danger" (click)="logout()">Cerrar sesion</button>
+    </ng-container>
+    <ng-template #loggedOut>
+      <button class="primary" (click)="login()">Iniciar sesion</button>
+    </ng-template>
+  </div>
+</header>
+
+<main class="content">
+  <router-outlet></router-outlet>
+</main>

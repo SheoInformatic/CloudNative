@@ -1,0 +1,15 @@
+<h1>Pedidos360</h1>
+<p>Arquitectura base: Angular + MSAL &rarr; Azure API Management &rarr; BFF (Spring Boot) &rarr; microservicios.</p>
+
+<div *ngIf="!authService.isAuthenticated()">
+  <p>Inicia sesion para ver tus datos y consumir el API a traves del BFF.</p>
+</div>
+
+<div *ngIf="authService.isAuthenticated()">
+  <h2>Estado del flujo de autenticacion</h2>
+  <p *ngIf="me">
+    El BFF valido tu token correctamente. Identidad resuelta desde el JWT:
+  </p>
+  <pre *ngIf="me">{{ me | json }}</pre>
+  <p *ngIf="error" style="color:#c0392b">{{ error }}</p>
+</div>
