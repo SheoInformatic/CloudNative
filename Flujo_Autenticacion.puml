@@ -1,0 +1,44 @@
+@startuml
+skinparam maxMessageSize 150
+autonumber
+
+actor "Usuario" as U
+participant "Frontend\n(Angular)" as F
+participant "Microsoft Entra ID\n(IDaaS)" as ID
+participant "API Management\n(APIM)" as A
+participant "BFF Service\n(Spring Boot)" as B
+
+U -> F: Hace clic en "Iniciar Sesión"
+activate F
+F -> ID: Redirige a login.microsoft.com\n(pasa el Client ID)
+deactivate F
+activate ID
+U -> ID: Ingresa Correo y Contraseña
+ID -> ID: Valida credenciales
+ID -> F: Redirige al Redirect URI\ncon los Tokens (ID Token, Access Token)
+deactivate ID
+activate F
+F -> F: Guarda tokens en navegador\ny actualiza interfaz
+F -> U: Muestra página de inicio logueada
+
+note over F, B: Flujo de Consumo de API
+U -> F: Navega a "Productos"
+F -> A: GET /productos\nHeader: Authorization: Bearer <AccessToken>
+activate A
+A -> ID: (Opcional) Obtiene llaves públicas para validar firma
+A -> A: Valida firma, vigencia, issuer y audience del JWT
+alt Token Inválido o Ausente
+    A --> F: 401 Unauthorized
+else Token Válido
+    A -> B: Reenvía petición GET /productos con Token
+    activate B
+    B -> B: Extrae claims del JWT\n(Roles: Admin/User)
+    B -> B: @PreAuthorize("hasAuthority('APPROLE_Admin')")
+    B --> A: 200 OK (Lista de Productos)
+    deactivate B
+    A --> F: 200 OK (Lista de Productos)
+    deactivate A
+    F --> U: Muestra productos en pantalla
+end
+deactivate F
+@enduml

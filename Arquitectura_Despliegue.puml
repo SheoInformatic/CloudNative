@@ -1,0 +1,40 @@
+@startuml
+skinparam maxMessageSize 150
+skinparam defaultTextAlignment center
+
+title Arquitectura de Despliegue - Pedidos360
+
+actor "Usuario\n(Navegador)" as user
+
+cloud "Microsoft Entra ID\n(Identity Provider)" as entraId #LightBlue
+database "Azure Container Registry\n(pedidos360acr7457)" as acr #LightGray
+
+package "Azure Resource Group: pedidos360-rg-br" {
+    
+    node "Frontend Service\n(Angular + Nginx)\n[Container App]" as frontend #LightGreen
+    node "API Management\n(pedidos360-apim-1128)" as apim #Orange
+    
+    package "Entorno Container Apps: pedidos360-env" {
+        node "BFF Service\n(Spring Boot)\n[Container App]" as bff #Yellow
+        node "Productos Service\n(Spring Boot)\n[Container App]" as productos #Yellow
+        node "Pedidos Service\n(Spring Boot)\n[Container App]" as pedidos #Yellow
+    }
+}
+
+user --> frontend : Accede a la URL
+user .up.> entraId : Login Interactivo (MSAL)
+frontend ..> entraId : Valida token (Redirect URI)
+
+frontend ==> apim : Peticiones a la API\n(Adjunta JWT)
+apim ..> entraId : Verifica llaves públicas\npara validar JWT
+apim ==> bff : Redirige tráfico\nsi el JWT es válido
+
+bff ==> productos : Llama servicio interno
+bff ==> pedidos : Llama servicio interno
+
+acr -.-> frontend : Pull imagen Docker
+acr -.-> bff : Pull imagen Docker
+acr -.-> productos : Pull imagen Docker
+acr -.-> pedidos : Pull imagen Docker
+
+@enduml
