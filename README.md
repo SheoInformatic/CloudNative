@@ -56,7 +56,46 @@ Escribimos el código en local, pero actualmente no estamos corriendo `ng serve`
 
 ## 3. Arquitectura de Despliegue
 
-Actualmente, el sistema está compuesto de varios recursos en Azure conectados entre sí (revisa el archivo `Arquitectura_Despliegue.puml` con la extensión de PlantUML para verlo gráficamente). En resumen:
+Actualmente, el sistema está compuesto de varios recursos en Azure conectados entre sí. El siguiente diagrama muestra la infraestructura y cómo interactúan:
+
+```mermaid
+graph TD
+    user((Usuario<br>Navegador))
+    
+    subgraph Cloud [Nube Externa]
+        entraId[Microsoft Entra ID<br>Identity Provider]
+        acr[(Azure Container Registry<br>pedidos360acr7457)]
+    end
+    
+    subgraph RG [Azure Resource Group: pedidos360-rg-br]
+        frontend[Frontend Service<br>Angular + Nginx<br>Container App]
+        apim{{API Management<br>pedidos360-apim-1128}}
+        
+        subgraph Env [Entorno Container Apps: pedidos360-env]
+            bff[BFF Service<br>Spring Boot]
+            productos[Productos Service<br>Spring Boot]
+            pedidos[Pedidos Service<br>Spring Boot]
+        end
+    end
+
+    user -->|Accede a la URL| frontend
+    user -.->|Login Interactivo MSAL| entraId
+    frontend -.->|Valida token / Redirect URI| entraId
+
+    frontend ==>|Peticiones a la API<br>Adjunta JWT| apim
+    apim -.->|Verifica llaves públicas<br>para validar JWT| entraId
+    apim ==>|Redirige tráfico<br>si el JWT es válido| bff
+
+    bff ==>|Llama servicio interno| productos
+    bff ==>|Llama servicio interno| pedidos
+
+    acr -.->|Pull imagen Docker| frontend
+    acr -.->|Pull imagen Docker| bff
+    acr -.->|Pull imagen Docker| productos
+    acr -.->|Pull imagen Docker| pedidos
+```
+
+En resumen:
 
 - **Frontend (Container App):** Nuestra aplicación Angular está empaquetada dentro de un servidor Nginx en un contenedor en la nube. Es la cara visible que carga el navegador.
 - **Entra ID (Azure AD):** Es nuestro servidor de identidad. Se encarga de validar correos y contraseñas.
@@ -68,7 +107,51 @@ Actualmente, el sistema está compuesto de varios recursos en Azure conectados e
 
 ## 4. Flujo de Autenticación E2E (End-to-End)
 
-El proceso completo paso a paso es el siguiente (revisa el archivo `Flujo_Autenticacion.puml`):
+El proceso completo paso a paso es el siguiente:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as Usuario
+    participant F as Frontend<br>(Angular)
+    participant ID as Microsoft Entra ID<br>(IDaaS)
+    participant A as API Management<br>(APIM)
+    participant B as BFF Service<br>(Spring Boot)
+
+    U->>F: Hace clic en "Iniciar Sesión"
+    activate F
+    F->>ID: Redirige a login.microsoft.com<br>(pasa el Client ID)
+    deactivate F
+    activate ID
+    U->>ID: Ingresa Correo y Contraseña
+    ID-->>ID: Valida credenciales
+    ID-->>F: Redirige al Redirect URI<br>con los Tokens (ID Token, Access Token)
+    deactivate ID
+    activate F
+    F-->>F: Guarda tokens en navegador<br>y actualiza interfaz
+    F-->>U: Muestra página de inicio logueada
+
+    Note over F,B: Flujo de Consumo de API
+    U->>F: Navega a "Productos"
+    F->>A: GET /productos<br>Header: Authorization: Bearer <AccessToken>
+    activate A
+    A-->>ID: (Opcional) Obtiene llaves públicas para validar firma
+    A-->>A: Valida firma, vigencia, issuer y audience del JWT
+    alt Token Inválido o Ausente
+        A-->>F: 401 Unauthorized
+    else Token Válido
+        A->>B: Reenvía petición GET /productos con Token
+        activate B
+        B-->>B: Extrae claims del JWT<br>(Roles: Admin/User)
+        B-->>B: @PreAuthorize("hasAuthority('APPROLE_Admin')")
+        B-->>A: 200 OK (Lista de Productos)
+        deactivate B
+        A-->>F: 200 OK (Lista de Productos)
+        deactivate A
+        F-->>U: Muestra productos en pantalla
+    end
+    deactivate F
+```
 
 1. **Intento de Acceso:** El usuario entra a la URL del frontend y hace clic en "Iniciar Sesión".
 2. **Redirección MSAL:** MSAL redirige al usuario hacia los servidores de Microsoft (`login.microsoftonline.com`).
